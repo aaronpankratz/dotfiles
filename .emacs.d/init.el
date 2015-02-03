@@ -1,77 +1,184 @@
-;; -*- mode: emacs-lisp -*-
-;; Simple .emacs configuration
+(setq user-full-name "Aaron Pankratz")
+(setq user-mail-address "pankratz.aaron@gmail.com")
 
-;; ---------------------
-;; -- Global Settings --
-;; ---------------------
-(add-to-list 'load-path "~/.emacs.d")
+(setenv "PATH" (concat "/usr/local/bin:/opt/local/bin:/usr/bin:/bin" (getenv "PATH")))
 (require 'cl)
-(require 'ido)
-(require 'ffap)
-(require 'uniquify)
-(require 'ansi-color)
-(require 'recentf)
-(require 'linum)
-(require 'smooth-scrolling)
-(require 'whitespace)
-(require 'dired-x)
-(require 'compile)
+
+(load "package")
+(package-initialize)
+(add-to-list 'package-archives
+                  '("marmalade" . "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives
+                  '("melpa" . "http://melpa.milkbox.net/packages/") t)
+
+(setq package-archive-enable-alist '(("melpa" deft magit)))
+
+(defvar apankratz/packages '(ac-slime
+			     auto-complete
+                             autopair
+                             clojure-mode
+			     coffee-mode
+			     csharp-mode
+			     deft
+			     erlang
+			     feature-mode
+			     flycheck
+			     gist
+			     go-mode
+			     graphviz-dot-mode
+			     haml-mode
+			     htmlize
+			     magit
+			     markdown-mode
+			     marmalade
+			     nodejs-repl
+			     o-blog
+			     org
+			     paredit
+			     php-mode
+			     puppet-mode
+			     restclient
+			     rvm
+			     scala-mode
+			     smex
+			     sml-mode
+			     solarized-theme
+                             web-mode
+			     writegood-mode
+			     yaml-mode)
+  "Default packages")
+
+(defun apankratz/packages-installed-p ()
+  (loop for pkg in apankratz/packages
+	when (not (package-installed-p pkg)) do (return nil)
+	finally (return t)))
+
+(unless (apankratz/packages-installed-p)
+  (message "%s" "Refreshing package database...")
+  (package-refresh-contents)
+  (dolist (pkg apankratz/packages)
+    (when (not (package-installed-p pkg))
+      (package-install pkg))))
+
+(setq inhibit-splash-screen t
+      initial-scratch-message nil
+      initial-major-mode 'org-mode)
+
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+;;(menu-bar-mode -1)
+(delete-selection-mode t)
+(transient-mark-mode t)
+(setq x-select-enable-clipboard t)
+
+(when window-system
+  (setq frame-title-format '(buffer-file-name "%f" ("%b")))
+  (set-face-attribute 'default nil
+		      :family "Inconsolata"
+		      :height 140
+		      :weight 'normal
+		      :width 'normal)
+
+  (when (functionp 'set-fontset-font)
+    (set-fontset-font "fontset-default"
+		      'unicode
+		      (font-spec :family "DejaVu Sans Mono"
+				 :width 'normal
+				 :size 12.4
+                                 :weight 'normal))))
+
+(setq-default indicate-empty-lines t)
+(when (not indicate-empty-lines)
+  (toggle-indicate-empty-lines))
+
+(setq tab-width 2
+      indent-tabs-mode nil)
+(setq make-backup-files nil)
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+(global-set-key (kbd "RET") 'newline-and-indent)
+(global-set-key (kbd "C-;") 'comment-or-uncomment-region)
+(global-set-key (kbd "M-/") 'hippie-expand)
+(global-set-key (kbd "C-+") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
+(global-set-key (kbd "C-c C-k") 'compile)
+(global-set-key (kbd "C-x g") 'magit-status)
+
+(defvar apankratz/vendor-dir (expand-file-name "vendor" user-emacs-directory))
+(add-to-list 'load-path apankratz/vendor-dir)
+
+(dolist (project (directory-files apankratz/vendor-dir t "\\w+"))
+    (when (file-directory-p project)
+          (add-to-list 'load-path project)))
+
+(setq echo-keystrokes 0.1
+      use-dialog-box nil
+      visible-bell t)
+(show-paren-mode t)
+
+(setq smex-save-file (expand-file-name ".smex-items" user-emacs-directory))
+(smex-initialize)
+(global-set-key (kbd "M-x") 'smex)
+(global-set-key (kbd "M-X") 'smex-major-mode-commands)
+
 (ido-mode t)
-(menu-bar-mode -1)
-(normal-erase-is-backspace-mode 1)
-(put 'downcase-region 'disabled nil)
-(put 'upcase-region 'disabled nil)
+(setq ido-enable-flex-matching t
+            ido-use-virtual-buffers t)
+
 (setq column-number-mode t)
-(setq inhibit-startup-message t)
-(setq save-abbrevs nil)
-(setq show-trailing-whitespace t)
-(setq suggest-key-bindings t)
-(setq vc-follow-symlinks t)
 
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(default ((t (:inherit autoface-default :strike-through nil :underline nil :slant normal :weight normal :height 120 :width normal :family "monaco"))))
- '(column-marker-1 ((t (:background "red"))))
- '(diff-added ((t (:foreground "cyan"))))
- '(flymake-errline ((((class color) (background light)) (:background "Red"))))
- '(font-lock-comment-face ((((class color) (min-colors 8) (background light)) (:foreground "red"))))
- '(fundamental-mode-default ((t (:inherit default))))
- '(highlight ((((class color) (min-colors 8)) (:background "white" :foreground "magenta"))))
- '(isearch ((((class color) (min-colors 8)) (:background "yellow" :foreground "black"))))
- '(linum ((t (:foreground "black" :weight bold))))
- '(region ((((class color) (min-colors 8)) (:background "white" :foreground "magenta"))))
- '(secondary-selection ((((class color) (min-colors 8)) (:background "gray" :foreground "cyan"))))
- '(show-paren-match ((((class color) (background light)) (:background "black"))))
- '(vertical-border ((t nil)))
-)
+(setq backup-directory-alist `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
 
-;; ------------
-;; -- Macros --
-;; ------------
-(load "defuns-config.el")
-(fset 'align-equals "\C-[xalign-regex\C-m=\C-m")
-(global-set-key "\M-=" 'align-equals)
-(global-set-key "\C-x\C-m" 'execute-extended-command)
-(global-set-key "\C-c;" 'comment-or-uncomment-region)
-(global-set-key "\M-n" 'next5)
-(global-set-key "\M-p" 'prev5)
-(global-set-key "\M-o" 'other-window)
-(global-set-key "\M-i" 'back-window)
-(global-set-key "\C-z" 'zap-to-char)
-(global-set-key "\C-h" 'backward-delete-char)
-(global-set-key "\M-d" 'delete-word)
-(global-set-key "\M-h" 'backward-delete-word)
-(global-set-key "\M-u" 'zap-to-char)
+(require 'autopair)
+(require 'auto-complete-config)
+(ac-config-default)
 
-;; ---------------------------
-;; -- JS Mode configuration --
-;; ---------------------------
-(load "js-config.el")
-(add-to-list 'load-path "~/.emacs.d/jade-mode") ;; github.com/brianc/jade-mode
-(require 'sws-mode)
-(require 'jade-mode)    
-(add-to-list 'auto-mode-alist '("\\.styl$" . sws-mode))
-(add-to-list 'auto-mode-alist '("\\.jade$" . jade-mode))
+(defun untabify-buffer ()
+    (interactive)
+      (untabify (point-min) (point-max)))
+
+(defun indent-buffer ()
+    (interactive)
+      (indent-region (point-min) (point-max)))
+
+(defun cleanup-buffer ()
+    "Perform a bunch of operations on the whitespace content of a buffer."
+      (interactive)
+        (indent-buffer)
+	  (untabify-buffer)
+	    (delete-trailing-whitespace))
+
+(defun cleanup-region (beg end)
+    "Remove tmux artifacts from region."
+      (interactive "r")
+        (dolist (re '("\\\\│\·*\n" "\W*│\·*"))
+	      (replace-regexp re "" nil beg end)))
+
+(global-set-key (kbd "C-x M-t") 'cleanup-region)
+(global-set-key (kbd "C-c n") 'cleanup-buffer)
+
+(setq-default show-trailing-whitespace t)
+
+(add-to-list 'auto-mode-alist '("\\.gitconfig$" . conf-mode))
+(add-to-list 'auto-mode-alist '("\\.hbs$" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.erb$" . web-mode))
+
+(defun js-custom ()
+    "js-mode-hook"
+      (setq js-indent-level 2))
+
+(add-hook 'js-mode-hook 'js-custom)
+
+(add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.mdown$" . markdown-mode))
+(add-hook 'markdown-mode-hook
+	            (lambda ()
+		                  (visual-line-mode t)
+				              (writegood-mode t)
+					                  (flyspell-mode t)))
+(setq markdown-command "pandoc --smart -f markdown -t html")
+(setq markdown-css-path (expand-file-name "markdown.css" apankratz/vendor-dir))
+
+(load-theme 'solarized-light t)
+(set-default-font "Consolas 16")
