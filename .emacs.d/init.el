@@ -6,8 +6,7 @@
 
 (load "package")
 (package-initialize)
-(add-to-list 'package-archives
-                  '("marmalade" . "http://marmalade-repo.org/packages/"))
+
 (add-to-list 'package-archives
                   '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
@@ -64,9 +63,7 @@
       initial-scratch-message nil
       initial-major-mode 'org-mode)
 
-(scroll-bar-mode -1)
 (tool-bar-mode -1)
-;;(menu-bar-mode -1)
 (delete-selection-mode t)
 (transient-mark-mode t)
 (setq x-select-enable-clipboard t)
@@ -180,5 +177,5 @@
 (setq markdown-command "pandoc --smart -f markdown -t html")
 (setq markdown-css-path (expand-file-name "markdown.css" apankratz/vendor-dir))
 
-(load-theme 'solarized-light t)
-(set-default-font "Consolas 16")
+(load-theme 'solarized-dark t)
+(set-default-font "SF Mono Light 16")
